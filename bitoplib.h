@@ -120,7 +120,7 @@ struct bit<0> {
 template <int DigitNum>
 struct bitmask {
     typedef typename uint_selector<DigitNum>::type type;
-    static const type value = bit<DigitNum>::value | bit<DigitNum - 1>::value;
+    static const type value = bit<DigitNum + 1>::value - 1;
 };
 template <>
 struct bitmask<0> {
