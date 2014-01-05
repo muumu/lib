@@ -9,14 +9,18 @@
 #include <boost/mpl/minus.hpp>
 #include <boost/mpl/plus.hpp>
 #include <boost/mpl/min_max.hpp>
-#include <boost/mpl/arithmetic.hpp>
+//#include <boost/mpl/arithmetic.hpp>
 #include <boost/mpl/greater_equal.hpp>
 #include <boost/mpl/erase.hpp>
 #include <boost/mpl/advance.hpp>
+#include <boost/mpl/shift_right.hpp>
+#include <boost/mpl/bitwise.hpp>
 #include <boost/preprocessor.hpp>
 #include "mpllib.h"
 
 namespace mpl = boost::mpl;
+
+const int BITS_PER_BYTE = 8;
 
 template <typename T>
 inline std::string to_bin_str(T n) {
@@ -25,6 +29,18 @@ inline std::string to_bin_str(T n) {
         str.push_back('0' + (n & 1));
         n >>= 1;
     }
+    std::reverse(str.begin(), str.end());
+    return str;
+}
+
+template <typename T>
+inline std::string to_bin_str(T n, std::size_t digit_num) {
+    std::string str;
+    while (n > 0) {
+        str.push_back('0' + (n & 1));
+        n >>= 1;
+    }
+    str.resize(digit_num, '0');
     std::reverse(str.begin(), str.end());
     return str;
 }
@@ -72,26 +88,50 @@ struct format_bin_string {
         >::type type;
 };
 */
-template <typename Sequence, int DigitNumber, bool greater = (DigitNumber >= mpl::size<Sequence>::value)>
+template <typename Sequence, int DigitNum, bool greater = (DigitNum >= mpl::size<Sequence>::value)>
 struct format_bin_string {};
 
-template <typename Sequence, int DigitNumber>
-struct format_bin_string<Sequence, DigitNumber, true> :
+template <typename Sequence, int DigitNum>
+struct format_bin_string<Sequence, DigitNum, true> :
     concat<
-        typename zero_string<DigitNumber - mpl::size<Sequence>::value>::type,
+        typename zero_string<DigitNum - mpl::size<Sequence>::value>::type,
         Sequence
     > {};
 
-template <typename Sequence, int DigitNumber>
-struct format_bin_string<Sequence, DigitNumber, false> :
-    tail_n_elements_c<Sequence, DigitNumber> {};
+template <typename Sequence, int DigitNum>
+struct format_bin_string<Sequence, DigitNum, false> :
+    mpllib::tail_n_c<Sequence, DigitNum> {};
 
-template <long long unsigned N>
+
+template <typename c>
 struct bin_string {
     typedef
         typename boost::mpl::push_back<
-            typename bin_string<(N >> 1)>::type, boost::mpl::char_<'0' + (N & 1)>
+            typename bin_string<typename mpl::shift_right<c, mpl::int_<1> >::type>::type,
+            boost::mpl::char_<'0' + (c::value & 1)>
         >::type type;
+
+    static std::string str() {
+        return std::string(mpl::c_str<type>::value);
+    }
+    template <int DigitNum>
+    static std::string str() {
+        return std::string(mpl::c_str<typename format_bin_string<type, DigitNum>::type>::value);
+    }
+};
+template <typename T>
+struct bin_string<mpl::integral_c<T, 0> > : boost::mpl::string<> {};
+
+template <long long unsigned N>
+struct bin_string_c : bin_string<mpl::integral_c<long long unsigned, N> > {};
+/*
+template <long long unsigned N>
+struct bin_string_c {
+    typedef
+        typename boost::mpl::push_back<
+            typename bin_string_c<(N >> 1)>::type, boost::mpl::char_<'0' + (N & 1)>
+        >::type type;
+
     static std::string str() {
         return std::string(mpl::c_str<type>::value);
     }
@@ -101,31 +141,33 @@ struct bin_string {
     }
 };
 template <>
-struct bin_string<0> : boost::mpl::string<> {};
-
+struct bin_string_c<0> : boost::mpl::string<> {};
+*/
 template <int DigitNum>
 struct uint_selector :
-    mpl::if_c<(DigitNum > sizeof(unsigned) * 8), unsigned long long, unsigned> {};
+    mpl::if_c<(DigitNum > sizeof(unsigned) * BITS_PER_BYTE), unsigned long long, unsigned> {};
 
-template <int DigitNum>
+template <int DigitNum, typename T = typename uint_selector<DigitNum>::type>
 struct bit {
-    typedef typename uint_selector<DigitNum>::type type;
-    static const type value = (static_cast<type>(1) << (DigitNum - 1));
+    typedef T type;
+    static const T value = (static_cast<T>(1) << (DigitNum - 1));
 };
 template <>
 struct bit<0> {
     enum {value = 0};
 };
 
-template <int DigitNum>
+template <int DigitNum, typename T = typename uint_selector<DigitNum>::type>
 struct bitmask {
-    typedef typename uint_selector<DigitNum>::type type;
-    static const type value = bit<DigitNum + 1>::value - 1;
+    typedef T type;
+    static const T value = bit<DigitNum + 1>::value - 1;
 };
+/*
 template <>
 struct bitmask<0> {
     enum {value = 0};
 };
+*/
 
 
 

@@ -8,27 +8,29 @@
 #include <boost/mpl/int.hpp>
 #include <boost/mpl/less.hpp>
 #include <boost/mpl/minus.hpp>
+
+namespace mpllib {
+
 namespace mpl = boost::mpl;
 
-template <typename T, typename N>
+template <typename Sequence, typename N>
 struct erase_after_n {
-    typedef typename mpl::begin<T>::type begin_iter;
+    typedef typename mpl::begin<Sequence>::type begin_iter;
     typedef typename mpl::advance<begin_iter, N>::type cut_iter;
-    typedef typename mpl::end<T>::type end_iter;
-    typedef typename mpl::erase<T, cut_iter, end_iter>::type type;
+    typedef typename mpl::end<Sequence>::type end_iter;
+    typedef typename mpl::erase<Sequence, cut_iter, end_iter>::type type;
 };
 
-template <typename T, typename N>
-struct erase_n {
-    typedef typename mpl::begin<T>::type begin_iter;
+template <typename Sequence, typename N>
+struct erase_head_n {
+    typedef typename mpl::begin<Sequence>::type begin_iter;
     typedef typename mpl::advance<begin_iter, N>::type cut_iter;
-    typedef typename mpl::erase<T, begin_iter, cut_iter>::type type;
+    typedef typename mpl::erase<Sequence, begin_iter, cut_iter>::type type;
 };
 
 template <typename Sequence, typename N> 
-struct head_n_elements {
-    typedef 
-    typename mpl::eval_if<
+struct head_n {
+    typedef typename mpl::eval_if<
         mpl::less<mpl::size<Sequence>, N>,
         Sequence,
         erase_after_n<Sequence, N>
@@ -37,25 +39,25 @@ struct head_n_elements {
 };
 
 template <typename Sequence, int N> 
-struct head_n_elements_c {
-    typedef typename head_n_elements<Sequence, mpl::int_<N> >::type type;
+struct head_n_c {
+    typedef typename head_n<Sequence, mpl::int_<N> >::type type;
 };
 
 template <typename Sequence, typename N> 
-struct tail_n_elements {
-    typedef 
-    typename mpl::eval_if<
+struct tail_n {
+    typedef typename mpl::eval_if<
         mpl::less<mpl::size<Sequence>, N>,
         Sequence,
-        erase_n<Sequence, mpl::minus<mpl::size<Sequence>, N> >
+        erase_head_n<Sequence, mpl::minus<mpl::size<Sequence>, N> >
     >::type type;
 
 };
 
 template <typename Sequence, int N> 
-struct tail_n_elements_c {
-    typedef typename tail_n_elements<Sequence, mpl::int_<N> >::type type;
+struct tail_n_c {
+    typedef typename tail_n<Sequence, mpl::int_<N> >::type type;
 };
 
+}; // end of namespace mpllib
 
 #endif //MPLLIB_H
