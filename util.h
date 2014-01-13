@@ -1,6 +1,8 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+namespace util {
+
 template <typename T>
 inline void delete_if_needed(T) {}
 
@@ -22,7 +24,7 @@ inline void exec_functor(Functor* f, Args&... args) {
     (*f)(args...);
 };
 
-
+}; // namespace util
 
 
 #endif
