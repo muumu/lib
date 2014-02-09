@@ -3,30 +3,49 @@
 
 #include <string>
 #include <sstream>
-#include <vector>
+#include <type_traits>
+#include "util.h"
 
 namespace util {
 
 template <typename T>
-std::string to_string(const T& t) {
+std::string to_string(const T& t,
+    typename std::enable_if<!is_container<T>::value && !std::is_array<T>::value>::type* = 0)
+{
     std::stringstream ss;
     ss << t;
     return ss.str();
 }
 
-std::string to_string(const std::string& str) {
+const std::string& to_string(const std::string& str) {
     return str;
 }
 
+std::string to_string(char c) {
+    return std::string(1, c);
+}
+
+std::string to_string(const char* str) {
+    return str;
+}
+
+template <typename S, typename T>
+std::string to_string(const std::pair<S, T>& pair) {
+    return "{" + to_string(pair.first) + "," + to_string(pair.second) + "}";
+}
+
 template <typename T>
-std::string to_string(const std::vector<T>& vec) {
-    if (vec.size() == 0) {
+std::string to_string(const T& cont,
+    typename std::enable_if<is_container<T>::value || std::is_array<T>::value>::type* = 0)
+{
+    if (std::begin(cont) == std::end(cont)) {
         return "";
     }
-    std::string str = to_string(vec[0]);
-    for (std::size_t i = 1; i < vec.size(); ++i) {
-        str += "," + to_string(vec[i]);
+    std::string str = "{";
+    for (const auto& elem : cont) {
+        str += to_string(elem) + ",";
     }
+    str.back() = '}';
     return str;
 }
 

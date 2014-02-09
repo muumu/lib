@@ -24,6 +24,19 @@ inline void exec_functor(Functor* f, Args&... args) {
     (*f)(args...);
 };
 
+template <typename T>
+class is_container
+{
+    typedef char true_type;
+    struct false_type{ true_type _[2]; };
+    template <typename U>
+    static true_type has_iterator_checker(typename U::iterator *);
+    template <typename U>
+    static false_type has_iterator_checker(...);
+public:
+    static const bool value = (sizeof(has_iterator_checker<T>(0)) == sizeof(true_type));
+};
+
 }; // namespace util
 
 
