@@ -2,7 +2,7 @@
 #include <functional>
 #include <array>
 #include <iostream>
-#include "static_initializer.hpp"
+#include "../static_initializer.hpp"
 
 
 class Bar {
