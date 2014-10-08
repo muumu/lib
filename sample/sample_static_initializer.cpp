@@ -40,7 +40,8 @@ const std::array<int, Bar::Size> Bar::arr_b =
 
 
 int get_code(char c) {
-    static auto mp = static_initializer<std::unordered_map<char, int> >::get(
+    //static const auto mp = static_initializer2::get<std::unordered_map<char, int> >(
+    static const auto mp = static_initializer2::get(
         [](std::unordered_map<char, int>& mp) {
             for (int i = 0; i < 26; ++i) {
                 mp['A' + i] = i;
@@ -49,7 +50,21 @@ int get_code(char c) {
                 mp['a' + i - 26] = i;
             }
         });
-    return mp[c];
+    return mp.at(c);
+}
+
+int get_code_innerfunc(char c) {
+    static const auto mp = []() {
+        static std::unordered_map<char, int> mp;
+        for (int i = 0; i < 26; ++i) {
+            mp['A' + i] = i;
+        }
+        for (int i = 26; i < 52; ++i) {
+            mp['a' + i - 26] = i;
+        }
+        return std::move(mp);
+    }();
+    return mp.at(c);
 }
 
 int get_code_innerclass(char c) {
@@ -70,8 +85,8 @@ int get_code_innerclass(char c) {
             return std::move(obj.mp_);
         }
     };
-    static auto mp = Map::get();
-    return mp[c];
+    static const auto mp = Map::get();
+    return mp.at(c);
 }
 
 template <class Map, class RevMap>
@@ -113,6 +128,7 @@ int main() {
     std::cout << get_code('a') << std::endl;
     std::cout << get_code('b') << std::endl;
     std::cout << get_code('z') << std::endl;
+    std::cout << get_code_innerfunc('z') << std::endl;
     std::cout << get_code_innerclass('z') << std::endl;
     Foo().print();
     Bar().print_head(5);
