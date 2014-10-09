@@ -2,32 +2,38 @@
 #include <iostream>
 #include <functional>
 #include <type_traits>
+#include <algorithm>
 
 namespace util {
-    // receives member function
-    template <class Container,
-             typename std::enable_if<util::is_container<Container>::value>::type* = nullptr,
-             class Func,
-             typename std::enable_if<std::is_member_function_pointer<Func>::value>::type* = nullptr>
-    Container map(const Container& source, Func fun) {
-        Container dest(source);
-        for (auto&& elem : dest) {
-            (elem.*fun)();
-        }
-        return dest;
-    }
-    // receives non-member function
-    template <class Container,
-             typename std::enable_if<util::is_container<Container>::value>::type* = nullptr,
-             class Func,
-             typename std::enable_if<!std::is_member_function_pointer<Func>::value>::type* = nullptr>
-    Container map(const Container& source, Func fun) {
-        Container dest(source);
-        auto d_it = dest.begin();
-        for (auto s_it = source.begin(); s_it != source.end(); ++s_it, ++d_it) {
-            *d_it = fun(*s_it);
-        }
-        return dest;
-    }
+
+template <
+    class Func,
+    typename std::enable_if<std::is_member_function_pointer<Func>::value>::type* = nullptr
+    >
+auto to_functor(Func func) {
+    return std::mem_fn(func);
+}
+
+template <
+    class Func,
+    typename std::enable_if<!std::is_member_function_pointer<Func>::value>::type* = nullptr
+    >
+auto to_functor(Func func) {
+    return func;
+}
+
+template <
+    class T, class... Ts,
+    template<class, class...> class Container,
+    typename std::enable_if<util::is_container<Container<T, Ts...> >::value>::type* = nullptr,
+    class Func
+    >
+auto map(const Container<T, Ts...>& source, Func fun) {
+    Container<decltype(
+        to_functor(fun)(std::declval<typename Container<T, Ts...>::value_type>())
+        )> dest(source.size());
+    std::transform(source.begin(), source.end(), dest.begin(), to_functor(fun));
+    return dest;
+}
 
 }
