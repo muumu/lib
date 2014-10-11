@@ -8,6 +8,12 @@
 
 namespace util {
 
+std::string to_lower(const std::string& str) {
+    std::string ret(str);
+    std::transform(str.begin(), str.end(), ret.begin(), ::tolower);
+    return ret;
+}
+
 template <typename T>
 std::string to_string(const T& t,
     typename std::enable_if<!is_container<T>::value && !std::is_array<T>::value>::type* = 0)
@@ -21,17 +27,52 @@ const std::string& to_string(const std::string& str) {
     return str;
 }
 
-std::string to_string(char c) {
-    return std::string(1, c);
-}
-
 std::string to_string(const char* str) {
     return str;
 }
 
+std::string to_string(char c) {
+    return std::string(1, c);
+}
+
+std::string enclose(const std::string& str, const std::string& enc) {
+    std::string s;
+    s.reserve(str.size() + 2 * enc.size());
+    s += enc; s += str; s += enc;
+    return s;
+}
+
+std::string enclose(char ch, const std::string& enc) {
+    std::string s;
+    s.reserve(1 + 2 * enc.size());
+    s += enc;
+    s.push_back(ch);
+    s += enc;
+    return s;
+}
+
+std::string add_double_quotes(const std::string& str) {
+    return enclose(str, "\"");
+}
+
+std::string add_single_quotes(char ch) {
+    return enclose(util::to_string(ch), "\'");
+}
+
+template <typename T>
+std::string formatted_string(const T& arg);
+
+std::string formatted_string(const std::string& str) {
+    return add_double_quotes(str);
+}
+
+std::string formatted_string(char ch) {
+    return add_single_quotes(ch);
+}
+
 template <typename S, typename T>
 std::string to_string(const std::pair<S, T>& pair) {
-    return "{" + to_string(pair.first) + "," + to_string(pair.second) + "}";
+    return "{" + formatted_string(pair.first) + "," + formatted_string(pair.second) + "}";
 }
 
 template <typename T>
@@ -43,7 +84,7 @@ std::string to_string(const T& cont,
     }
     std::string str = "{";
     for (const auto& elem : cont) {
-        str += to_string(elem) + ",";
+        str += formatted_string(elem) + ",";
     }
     str.back() = '}';
     return str;
@@ -55,14 +96,20 @@ std::string to_string(const T& arg, const Args&... args) {
 }
 
 template <typename T>
-void dump(const T& arg) {
-    std::cout << to_string(arg) << std::endl;
+std::string formatted_string(const T& arg) {
+    return util::to_string(arg);
 }
 
+template <typename T>
+void print(const T& arg) {
+    std::cout << util::formatted_string(arg) << std::endl;
+}
+
+
 template <typename T, typename... Args>
-void dump(const T& arg, const Args&... args) {
-    std::cout << to_string(arg) << std::endl;
-    dump(args...);
+void print(const T& arg, const Args&... args) {
+    print(arg);
+    print(args...);
 }
 
 };
