@@ -7,51 +7,48 @@
 #include <map>
 #include <unordered_map>
 
+using namespace std;
+using namespace util;
+
 int main() {
-    std::vector<std::string> source = {"a?", "ab?", "abc?", "abcd?"};
-    util::print(source); // {a?,ab?,abc?,abcd?}
 
     {
-        auto output = util::map(source,
-            [](const std::string& str) { return str.substr(0, str.size() - 1); });
-        util::print(output); // {a,ab,abc,abcd}
-    }
-
-    {
-        auto output = util::map(source, &std::string::size);
-        util::print(output); // {2,3,4,5}
+        vector<string> source = {"a?", "ab?", "abc?", "abcd?"};
+        auto output = util::map(source, &util::init);
+        print(output); // {"a","ab","abc","abcd"}
     }
     {
-        std::map<std::string, int> src_map = {{"RED", 0}, {"GREEN", 1}, {"BLUE", 2}};
-        util::print(src_map);
-        auto result_map = util::map(src_map,
-            [](const std::pair<std::string, int>& pair) {
-                return std::make_pair(util::to_lower(pair.first), pair.second);
-            });
-        util::print(result_map);
-    }
-    {
-        std::unordered_map<std::string, int> src_map = {{"RED", 0}, {"GREEN", 1}, {"BLUE", 2}};
-        util::print(src_map);
-        auto result_map = util::map(src_map,
-            [](const std::pair<std::string, int>& pair) {
-                return std::make_pair(util::to_lower(pair.first), pair.second);
-            });
-        util::print(result_map);
+        list<string> source = {"", "a", "", "ab"};
+        auto output = util::map(source, &string::empty);
+        print(output); // {true,false,true,false}
     }
 
     {
-        std::unordered_map<std::string, int> src_map = {{"RED", 0}, {"GREEN", 1}, {"BLUE", 2}};
-        util::print(src_map);
-        auto result = util::map(src_map,
-            [](const std::pair<std::string, int>& pair) {
-                return pair.first + ": " + util::to_string(pair.second);
+        set<string> source = {"a?", "ab?", "ac?", "abcd?"};
+        auto output = util::map(source, &string::size);
+        print(output); // {2,3,5}
+    }
+    {
+        multiset<string> source = {"a?", "ab?", "ac?", "abcd?"};
+        auto output = util::map(source, &string::size);
+        print(output); // {2,3,3,5}
+    }
+    {
+        std::map<string, int> source = {{"RED", 0}, {"GREEN", 1}, {"BLUE", 2}};
+        auto result = util::map(source,
+            [](const pair<string, int>& pair) {
+                return make_pair(util::lower(pair.first), pair.second);
             });
-        std::list<std::string> result_list = util::map(src_map,
-            [](const std::pair<std::string, int>& pair) {
-                return pair.first + ": " + util::to_string(pair.second);
-            });
-        util::print(result);
+        print(result); // {{"blue",2},{"green",1},{"red",0}}
+    }
+    {
+        multimap<string, int> src_map = {{"RED", 0}, {"RED", 0}, {"GREEN", 1}, {"BLUE", 2}};
+        auto func = [](const pair<string, int>& pair) {
+            return pair.first + ": " + util::to_string(pair.second);};
+        auto result = util::map(src_map, func);
+        print(result); // {"BLUE: 2","GREEN: 1","RED: 0","RED: 0"}
+        set<string> result_set = util::map(src_map, func);
+        print(result_set); // {"BLUE: 2","GREEN: 1","RED: 0"}
     }
 
 

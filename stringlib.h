@@ -8,7 +8,7 @@
 
 namespace util {
 
-std::string to_lower(const std::string& str) {
+std::string lower(const std::string& str) {
     std::string ret(str);
     std::transform(str.begin(), str.end(), ret.begin(), ::tolower);
     return ret;
@@ -68,6 +68,10 @@ std::string formatted_string(const std::string& str) {
 
 std::string formatted_string(char ch) {
     return add_single_quotes(ch);
+}
+
+std::string formatted_string(bool b) {
+    return b ? "true" : "false";
 }
 
 template <typename S, typename T>

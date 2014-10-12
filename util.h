@@ -23,13 +23,62 @@ namespace util {
 #define DEF_HAS_METHOD(X) struct has_ ## X ## _impl\
     {\
         template <class T>\
-        static std::true_type check(decltype(declval<T>().X)*);\
+        static std::true_type check(decltype(std::declval<T>().X)*);\
         template <class T>\
         static std::false_type check(...);\
     };\
     template <class T>\
     class has_ ## X : public decltype(has_ ## X ## _impl::check<T>(nullptr)) {};
 
+#define DEF_CONTAINER_HAS_METHOD(X) struct has_ ## X ## _impl\
+    {\
+        template <class T>\
+        static std::true_type check(decltype(std::declval<T>().X(\
+            std::declval<typename T::value_type>()))*);\
+        template <class T>\
+        static std::false_type check(...);\
+    };\
+    template <class T>\
+    class has_ ## X : public decltype(has_ ## X ## _impl::check<T>(nullptr)) {};
+
+
+struct has_push_back_impl {
+    template <class T>
+    static std::true_type check(decltype(std::declval<T>().push_back(
+        std::declval<typename T::value_type>()))*);
+    template <class T>
+    static std::false_type check(...);
+};
+template <class T>
+class has_push_back : public decltype(has_push_back_impl::check<T>(nullptr)) {};
+
+struct has_insert_impl {
+    template <class T>
+    static std::true_type check(decltype(std::declval<T>().insert(
+        std::declval<T>().end(), std::declval<typename T::value_type>()))*);
+    template <class T>
+    static std::false_type check(...);
+};
+template <class T>
+class has_insert : public decltype(has_insert_impl::check<T>(nullptr)) {};
+
+
+template <
+    class Container,
+    typename std::enable_if<!has_push_back<Container>::value>::type* = nullptr,
+    typename std::enable_if<has_insert<Container>::value>::type* = nullptr
+    >
+auto back_inserter(Container& container) {
+    return std::insert_iterator<Container>(container, container.end());
+}
+
+template <
+    class Container,
+    typename std::enable_if<has_push_back<Container>::value>::type* = nullptr
+    >
+auto back_inserter(Container& container) {
+    return std::back_insert_iterator<Container>(container);
+}
 
 template <class T, class Alloc = typename std::allocator<T> >
 struct convertible_vector : public std::vector<T, Alloc> {
@@ -39,17 +88,32 @@ struct convertible_vector : public std::vector<T, Alloc> {
     }
 };
 
+template <
+    class Func,
+    typename std::enable_if<std::is_member_function_pointer<Func>::value>::type* = nullptr
+    >
+auto to_functor(Func func) {
+    return std::mem_fn(func);
+}
+
+template <
+    class Func,
+    typename std::enable_if<!std::is_member_function_pointer<Func>::value>::type* = nullptr
+    >
+auto to_functor(Func func) {
+    return func;
+}
 
 template <typename T>
-inline void delete_if_needed(T) {}
+inline void delete_if_pointer(T) {}
 
 template <typename T>
-inline void delete_if_needed(T* p) {
+inline void delete_if_pointer(T* p) {
     delete p;
 }
 
 template <typename ReturnType, typename... Args>
-inline void delete_if_needed(ReturnType (*)(Args... args)) {};
+inline void delete_if_pointer(ReturnType (*)(Args... args)) {};
 
 template <typename Functor, typename... Args>
 inline void exec_functor(Functor f, Args&... args) {
