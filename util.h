@@ -13,11 +13,11 @@ namespace util {
         typedef char true_type;\
         struct false_type{ true_type _[2]; };\
         template <typename U>\
-        static true_type has_iterator_checker(typename U::X *);\
+        static true_type has_ ## X ## _checker(typename U::X *);\
         template <typename U>\
-        static false_type has_iterator_checker(...);\
+        static false_type has_ ## X ## _checker(...);\
     public:\
-        static const bool value = (sizeof(has_iterator_checker<T>(0)) == sizeof(true_type));\
+        static const bool value = (sizeof(has_ ## X ## _checker<T>(0)) == sizeof(true_type));\
     };
 
 #define DEF_HAS_METHOD(X) struct has_ ## X ## _impl\
@@ -29,18 +29,6 @@ namespace util {
     };\
     template <class T>\
     class has_ ## X : public decltype(has_ ## X ## _impl::check<T>(nullptr)) {};
-
-#define DEF_CONTAINER_HAS_METHOD(X) struct has_ ## X ## _impl\
-    {\
-        template <class T>\
-        static std::true_type check(decltype(std::declval<T>().X(\
-            std::declval<typename T::value_type>()))*);\
-        template <class T>\
-        static std::false_type check(...);\
-    };\
-    template <class T>\
-    class has_ ## X : public decltype(has_ ## X ## _impl::check<T>(nullptr)) {};
-
 
 struct has_push_back_impl {
     template <class T>
@@ -137,21 +125,14 @@ struct is_pair {
 };
 
 template <class Container>
-struct is_map_ {
+struct is_map {
     static const bool value =
         has_iterator<Container>::value &&
         has_key_type<Container>::value &&
         has_mapped_type<Container>::value;
 };
 
-template <template<class, class, class...> class Container, class T1, class T2, class... Ts>
-struct is_map {
-    static const bool value = std::is_same<
-        typename Container<T1, T2, Ts...>::value_type,
-        std::pair<const T1, T2> >::value;
-};
-
-
+// deprecated
 template <typename T>
 class is_container
 {

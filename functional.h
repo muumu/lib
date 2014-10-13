@@ -39,7 +39,7 @@ template <
     template<class, class, class...> class Container,
     class Func,
     typename std::enable_if<util::has_iterator<Container<T1, T2, Ts...> >::value>::type* = nullptr,
-    typename std::enable_if<!util::is_map<Container, T1, T2, Ts...>::value>::type* = nullptr
+    typename std::enable_if<!util::is_map<Container<T1, T2, Ts...> >::value>::type* = nullptr
     >
 auto map(const Container<T1, T2, Ts...>& source, Func fun) {
     Container<decltype(
@@ -75,7 +75,7 @@ template <
     class Key,
     class T,
     class Func,
-    typename std::enable_if<util::is_map_<
+    typename std::enable_if<util::is_map<
         Map<Key, T, Compare<Key>, Alloc<Pair<const Key, T> > >
         >::value>::type* = nullptr,
     typename std::enable_if<util::is_pair<
@@ -110,7 +110,7 @@ template <
     class Key,
     class T,
     class Func,
-    typename std::enable_if<util::is_map_<
+    typename std::enable_if<util::is_map<
         Map<Key, T, Hash<Key>, Pred<Key>, Alloc<Pair<const Key, T> > >
         >::value>::type* = nullptr,
     typename std::enable_if<util::is_pair<
@@ -140,7 +140,7 @@ template <
     template<class, class, class...> class Map,
     class Func,
     class Key, class T, class... Ts,
-    typename std::enable_if<util::is_map_<Map<Key, T, Ts...> >::value>::type* = nullptr,
+    typename std::enable_if<util::is_map<Map<Key, T, Ts...> >::value>::type* = nullptr,
     typename std::enable_if<!util::is_pair<
         decltype(util::functor(std::declval<Func>())(
         std::declval<typename Map<Key, T, Ts...>::value_type>()))
