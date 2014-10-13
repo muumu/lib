@@ -1,5 +1,5 @@
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef UTIL_UTIL_H
+#define UTIL_UTIL_H
 
 #include <memory>
 #include <vector>
@@ -92,7 +92,7 @@ template <
     class Func,
     typename std::enable_if<std::is_member_function_pointer<Func>::value>::type* = nullptr
     >
-auto to_functor(Func func) {
+auto functor(Func func) {
     return std::mem_fn(func);
 }
 
@@ -100,7 +100,7 @@ template <
     class Func,
     typename std::enable_if<!std::is_member_function_pointer<Func>::value>::type* = nullptr
     >
-auto to_functor(Func func) {
+auto functor(Func func) {
     return func;
 }
 
@@ -126,6 +126,7 @@ inline void exec_functor(Functor* f, Args&... args) {
 };
 
 DEF_HAS_TYPE(iterator)
+DEF_HAS_TYPE(key_type)
 DEF_HAS_TYPE(mapped_type)
 DEF_HAS_TYPE(first_type)
 DEF_HAS_TYPE(second_type)
@@ -135,12 +136,21 @@ struct is_pair {
     static const bool value = has_first_type<T>::value && has_second_type<T>::value;
 };
 
+template <class Container>
+struct is_map_ {
+    static const bool value =
+        has_iterator<Container>::value &&
+        has_key_type<Container>::value &&
+        has_mapped_type<Container>::value;
+};
+
 template <template<class, class, class...> class Container, class T1, class T2, class... Ts>
 struct is_map {
     static const bool value = std::is_same<
         typename Container<T1, T2, Ts...>::value_type,
         std::pair<const T1, T2> >::value;
 };
+
 
 template <typename T>
 class is_container
@@ -155,7 +165,7 @@ public:
     static const bool value = (sizeof(has_iterator_checker<T>(0)) == sizeof(true_type));
 };
 
-}; // namespace util
+} // namespace util
 
 
-#endif
+#endif // UTIL_UTIL_H

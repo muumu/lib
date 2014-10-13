@@ -1,16 +1,23 @@
-#ifndef STRINGLIB_H
-#define STRINGLIB_H
+#ifndef UTIL_STRINGLIB_H
+#define UTIL_STRINGLIB_H
 
+#include "demangler.h"
+#include "util.h"
 #include <string>
 #include <sstream>
 #include <type_traits>
-#include "util.h"
 
 namespace util {
 
 std::string lower(const std::string& str) {
     std::string ret(str);
     std::transform(str.begin(), str.end(), ret.begin(), ::tolower);
+    return ret;
+}
+
+std::string upper(const std::string& str) {
+    std::string ret(str);
+    std::transform(str.begin(), str.end(), ret.begin(), ::toupper);
     return ret;
 }
 
@@ -106,7 +113,8 @@ std::string formatted_string(const T& arg) {
 
 template <typename T>
 void print(const T& arg) {
-    std::cout << util::formatted_string(arg) << std::endl;
+    std::cout << util::demangle(arg) << std::endl;
+    std::cout << "    " << util::formatted_string(arg) << std::endl;
 }
 
 
@@ -116,7 +124,7 @@ void print(const T& arg, const Args&... args) {
     print(args...);
 }
 
-};
+} // namespace util
 
 
-#endif // STRINGLIB_H
+#endif // UTIL_STRINGLIB_H
